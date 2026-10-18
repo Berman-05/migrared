@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="MIGRARED: mapa de servicios públicos y de apoyo para personas migrantes en Guatemala. Funciona sin Internet.">
+  <meta name="theme-color" content="#0f5e57">
+  <meta name="referrer" content="no-referrer">
+  <!-- Sin scripts ni estilos de terceros: solo se permiten recursos propios y los mosaicos del mapa. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>MIGRARED</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="icons/icon.svg" alt="" width="32" height="32">
+      <div>
+        <h1>MIGRARED</h1>
+        <p class="tagline">Servicios de apoyo cerca de usted</p>
+      </div>
+    </div>
+    <button id="estado-red" class="net" type="button" aria-live="polite" title="Estado de conexión y datos">
+      <span class="dot"></span><span class="net-label">…</span>
+    </button>
+  </header>
+
+  <section class="controls" aria-label="Buscar y filtrar servicios">
+    <div class="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="buscar" type="search" placeholder="¿Qué necesita? Ej.: hospital, albergue, refugio" autocomplete="off" enterkeyhint="search" aria-label="Buscar servicio">
+    </div>
+    <div id="categorias" class="chips" role="group" aria-label="Categorías"></div>
+    <details class="filtros">
+      <summary>Más filtros</summary>
+      <div class="filtros-grid">
+        <label>Departamento
+          <select id="f-departamento"><option value="">Todos</option></select>
+        </label>
+        <label>Tipo de institución
+          <select id="f-tipo">
+            <option value="">Todas</option>
+            <option value="publica">Pública</option>
+            <option value="ong">ONG</option>
+            <option value="internacional">Internacional</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="f-gratuito"> Solo gratuitos</label>
+        <label class="check"><input type="checkbox" id="f-emergencia"> Atención de emergencia</label>
+        <label class="check"><input type="checkbox" id="f-guardados"> Solo mis guardados</label>
+      </div>
+    </details>
+  </section>
+
+  <main>
+    <section id="vista-mapa" class="vista activa" aria-label="Mapa">
+      <div id="mapa"></div>
+      <button id="btn-ubicacion" class="fab" type="button" aria-label="Mostrar servicios cerca de mí">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>
+        <span>Cerca de mí</span>
+      </button>
+    </section>
+
+    <section id="vista-lista" class="vista" aria-label="Lista de servicios">
+      <p id="resumen" class="resumen" aria-live="polite"></p>
+      <ul id="lista" class="lista"></ul>
+    </section>
+
+    <section id="vista-emergencia" class="vista pagina" aria-label="Números de emergencia">
+      <h2>Números de emergencia</h2>
+      <p>Llamar a estos números es gratuito desde cualquier teléfono en Guatemala.</p>
+      <div class="emergencias">
+        <a class="emer" href="tel:110"><strong>110</strong><span>Policía Nacional Civil</span></a>
+        <a class="emer" href="tel:122"><strong>122</strong><span>Bomberos Voluntarios (ambulancia)</span></a>
+        <a class="emer" href="tel:123"><strong>123</strong><span>Bomberos Municipales (ambulancia)</span></a>
+        <a class="emer" href="tel:1555"><strong>1555</strong><span>Procuraduría de los Derechos Humanos</span></a>
+      </div>
+      <h3>Sus derechos</h3>
+      <ul class="derechos">
+        <li>Tiene derecho a recibir <strong>atención médica de emergencia</strong> aunque no tenga documentos.</li>
+        <li>Puede <strong>solicitar refugio</strong> si su vida o libertad corren peligro en su país.</li>
+        <li>Las niñas, niños y adolescentes tienen <strong>protección especial</strong>, viajen solos o acompañados.</li>
+        <li>Nadie puede quitarle sus documentos de identidad.</li>
+      </ul>
+      <p class="nota">Información orientativa. Confirme con la institución correspondiente.</p>
+    </section>
+
+    <section id="vista-info" class="vista pagina" aria-label="Información y privacidad">
+      <h2>Su privacidad</h2>
+      <ul class="privacidad">
+        <li><strong>No pedimos su nombre</strong>, nacionalidad, documento ni ningún dato personal.</li>
+        <li><strong>No hay cuentas</strong>, cookies de seguimiento ni publicidad.</li>
+        <li>Su <strong>ubicación</strong> solo se usa en su teléfono para ordenar los servicios por cercanía. Nunca se envía ni se guarda.</li>
+        <li>Lo que guarda (favoritos) se queda <strong>solo en este dispositivo</strong>.</li>
+      </ul>
+      <h2>Datos del catálogo</h2>
+      <dl class="meta">
+        <dt>Versión</dt><dd id="info-version">—</dd>
+        <dt>Última actualización</dt><dd id="info-sync">—</dd>
+        <dt>Servicios guardados en el teléfono</dt><dd id="info-total">—</dd>
+      </dl>
+      <div class="acciones">
+        <button id="btn-actualizar" type="button" class="btn">Buscar actualizaciones</button>
+        <button id="btn-instalar" type="button" class="btn" hidden>Instalar en el teléfono</button>
+        <button id="btn-borrar" type="button" class="btn btn-peligro">Borrar todos los datos de este teléfono</button>
+      </div>
+      <p class="nota" id="aviso-catalogo"></p>
+      <p class="nota">MIGRARED – Proyecto social, Ética Aplicada, Universidad Rafael Landívar, Campus de Quetzaltenango. Mapa © colaboradores de OpenStreetMap.</p>
+    </section>
+  </main>
+
+  <nav class="tabs" aria-label="Secciones">
+    <button type="button" data-vista="mapa" class="activa" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>Mapa
+    </button>
+    <button type="button" data-vista="lista">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>Lista
+    </button>
+    <button type="button" data-vista="emergencia" class="tab-emer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg>Emergencia
+    </button>
+    <button type="button" data-vista="info">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>Privacidad
+    </button>
+  </nav>
+
+  <dialog id="ficha" aria-labelledby="ficha-titulo">
+    <div class="ficha-cuerpo" id="ficha-cuerpo"></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

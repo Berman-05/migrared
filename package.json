@@ -1,0 +1,14 @@
+{
+  "name": "migrared",
+  "version": "1.0.0",
+  "description": "PWA offline-first para localizar servicios públicos y de apoyo para la población migrante en Guatemala",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "vendor": "node scripts/vendor.js",
+    "postinstall": "node scripts/vendor.js"
+  },
+  "dependencies": {
+    "leaflet": "1.9.4"
+  }
+}
