@@ -45,4 +45,10 @@ http
       res.writeHead(200, headers).end(data);
     });
   })
+  .on('error', (err) => {
+    if (err.code !== 'EADDRINUSE') throw err;
+    console.error(`El puerto ${PORT} ya está en uso (¿hay otro "npm start" abierto?).`);
+    console.error('Ciérrelo con Ctrl + C o use otro puerto, por ejemplo:  $env:PORT=3000; npm start');
+    process.exit(1);
+  })
   .listen(PORT, () => console.log(`MIGRARED disponible en http://localhost:${PORT}`));
