@@ -4,10 +4,11 @@
 //  - Mosaicos del mapa: caché primero; se guardan las zonas que la persona ya vio con conexión
 //    (con un límite para no llenar la memoria del teléfono).
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE_APP = `migrared-app-${VERSION}`;
 const CACHE_DATOS = 'migrared-datos';
-const CACHE_MAPA = 'migrared-mapa';
+// v2: la versión anterior guardó por error respuestas 403 de OpenStreetMap.
+const CACHE_MAPA = 'migrared-mapa-v2';
 const MAX_MOSAICOS = 1500; // ~15–25 MB aprox.
 
 const APP_SHELL = [
@@ -43,7 +44,9 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       for (const clave of await caches.keys()) {
-        if (clave.startsWith('migrared-app-') && clave !== CACHE_APP) await caches.delete(clave);
+        const appVieja = clave.startsWith('migrared-app-') && clave !== CACHE_APP;
+        const mapaViejo = clave.startsWith('migrared-mapa') && clave !== CACHE_MAPA;
+        if (appVieja || mapaViejo) await caches.delete(clave);
       }
       await self.clients.claim();
     })()
@@ -103,7 +106,8 @@ async function mosaico(req) {
   const enCache = await cache.match(req);
   if (enCache) return enCache;
   const resp = await fetch(req);
-  if (resp.ok || resp.type === 'opaque') {
+  // Solo se guardan mosaicos válidos; un error (403, 429…) no debe quedar fijo sin conexión.
+  if (resp.ok) {
     await cache.put(req, resp.clone());
     recortar(cache);
   }

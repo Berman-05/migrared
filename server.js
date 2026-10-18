@@ -5,7 +5,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || process.argv[2] || 8080;
 const ROOT = path.join(__dirname, 'public');
 
 const TYPES = {

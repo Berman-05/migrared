@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "migrared", "runtimeExecutable": "node", "runtimeArgs": ["server.js"], "port": 8080 }
+    { "name": "migrared", "runtimeExecutable": "node", "runtimeArgs": ["server.js"], "port": 8080 },
+    { "name": "migrared-8081", "runtimeExecutable": "node", "runtimeArgs": ["server.js", "8081"], "port": 8081 }
   ]
 }

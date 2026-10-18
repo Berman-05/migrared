@@ -142,6 +142,11 @@ function iniciarMapa() {
     maxZoom: 18,
     subdomains: 'abc',
     errorTileUrl: MOSAICO_VACIO,
+    // OpenStreetMap bloquea (403) los mosaicos pedidos sin Referer. Solo se envía el origen
+    // del sitio (nunca la ruta ni datos de la persona); el resto de la página sigue sin referer.
+    referrerPolicy: 'strict-origin',
+    // Petición CORS: permite al Service Worker comprobar el estado y no guardar errores.
+    crossOrigin: true,
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(mapa);
   capaMarcadores = L.layerGroup().addTo(mapa);
