@@ -131,13 +131,17 @@ let mapa;
 let capaMarcadores;
 let marcadorUsuario;
 
-// Mosaico gris que se muestra cuando una zona del mapa no está guardada y no hay conexión.
+// Mosaico transparente para las zonas no guardadas sin conexión: deja ver el mapa base de abajo.
 const MOSAICO_VACIO =
-  'data:image/svg+xml,' +
-  encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#e7ebe9"/></svg>');
+  'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>');
 
 function iniciarMapa() {
   mapa = L.map('mapa', { zoomControl: true, attributionControl: true }).setView(CENTRO_GT, 7);
+  // El mapa base va debajo de los mosaicos (tilePane = 200): con conexión lo tapa OpenStreetMap.
+  mapa.createPane('base').style.zIndex = 150;
+  mapa.on('zoomend', marcarZoom);
+  marcarZoom();
+  cargarMapaBase();
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     subdomains: 'abc',
@@ -150,6 +154,59 @@ function iniciarMapa() {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(mapa);
   capaMarcadores = L.layerGroup().addTo(mapa);
+}
+
+/** Clases según el zoom, para mostrar u ocultar etiquetas del mapa base desde CSS. */
+function marcarZoom() {
+  const z = mapa.getZoom();
+  const c = mapa.getContainer().classList;
+  c.toggle('z-bajo', z < 8);
+  c.toggle('z-medio', z >= 8 && z < 10);
+  c.toggle('z-alto', z >= 10);
+}
+
+/**
+ * Mapa base ligero incluido en la app (public/data/mapa-base.json, ~90 KB): departamentos, países
+ * vecinos, carreteras principales y ciudades. Siempre está disponible sin conexión, aunque la
+ * persona nunca haya visto esa zona del mapa con Internet.
+ */
+async function cargarMapaBase() {
+  let base;
+  try {
+    base = await (await fetch('data/mapa-base.json')).json();
+  } catch (err) {
+    console.warn('Mapa base no disponible:', err);
+    return;
+  }
+  const poligono = (anillos, clase) =>
+    L.polygon(anillos.map((a) => a.map(([lng, lat]) => [lat, lng])), { pane: 'base', className: clase, interactive: false });
+  const etiqueta = (lat, lng, texto, clase) =>
+    L.marker([lat, lng], {
+      pane: 'base',
+      interactive: false,
+      keyboard: false,
+      icon: L.divIcon({ className: `etq ${clase}`, html: `<span>${esc(texto)}</span>`, iconSize: null }),
+    });
+
+  const capa = L.layerGroup();
+  for (const v of base.vecinos) poligono(v.anillos, 'base-vecino').addTo(capa);
+  for (const d of base.deptos) {
+    const p = poligono(d.anillos, 'base-depto').addTo(capa);
+    const c = p.getBounds().getCenter();
+    etiqueta(c.lat, c.lng, d.nombre, 'etq-depto').addTo(capa);
+  }
+  for (const r of base.carreteras) {
+    L.polyline(r.puntos.map(([lng, lat]) => [lat, lng]), {
+      pane: 'base',
+      className: r.principal ? 'base-ruta base-ruta-principal' : 'base-ruta',
+      interactive: false,
+    }).addTo(capa);
+  }
+  for (const c of base.ciudades) {
+    L.circleMarker([c.lat, c.lng], { pane: 'base', radius: c.nivel === 1 ? 4 : 3, className: 'base-ciudad', interactive: false }).addTo(capa);
+    etiqueta(c.lat, c.lng, c.nombre, `etq-ciudad etq-n${c.nivel}`).addTo(capa);
+  }
+  capa.addTo(mapa);
 }
 
 function iconoServicio(s) {

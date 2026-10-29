@@ -37,8 +37,15 @@ Para publicarla basta con subir la carpeta `public/` a cualquier hosting estáti
 
 Flujo sin conexión: la persona abre la app → se carga desde la caché del Service Worker → los
 servicios se leen de IndexedDB → puede buscar, filtrar, ver fichas, ordenar por cercanía y llamar.
-El mapa muestra las zonas que ya se vieron con conexión; el resto aparece en gris, pero los
-marcadores y la lista siguen funcionando.
+Mapa sin conexión, en dos capas:
+
+1. **Mapa base incluido en la app** (`public/data/mapa-base.json`, ~90 KB): departamentos, países
+   vecinos, carreteras principales y ciudades. Está disponible sin conexión desde la primera visita,
+   aunque la persona nunca haya visto esa zona.
+2. **Mosaicos de OpenStreetMap** (calles, detalle): se ven con conexión y se guardan las zonas ya
+   vistas (hasta 1500 mosaicos). Sin conexión se muestran encima del mapa base donde existan.
+
+Para regenerar el mapa base: `node scripts/mapa-base.js <carpeta>` (ver las fuentes al inicio del script).
 
 ## Privacidad y protección de datos
 
@@ -65,7 +72,7 @@ Los servicios `suspendido` no se muestran.
 
 ## Actualizar el código
 
-Después de cambiar HTML, CSS o JS, subir `VERSION` en `public/sw.js` (por ejemplo `v4` → `v5`). Si no, los
+Después de cambiar HTML, CSS o JS, subir `VERSION` en `public/sw.js` (por ejemplo `v5` → `v6`). Si no, los
 teléfonos seguirán usando la versión guardada. La app se recarga sola cuando detecta la versión nueva.
 
 ## ⚠️ Datos de demostración
