@@ -153,7 +153,13 @@ function iniciarMapa() {
     crossOrigin: true,
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(mapa);
-  capaMarcadores = L.layerGroup().addTo(mapa);
+  capaMarcadores = L.markerClusterGroup({
+    iconCreateFunction: iconoGrupo,
+    showCoverageOnHover: false,
+    maxClusterRadius: 50,
+    disableClusteringAtZoom: 15,
+    chunkedLoading: true,
+  }).addTo(mapa);
 }
 
 /** Clases según el zoom, para mostrar u ocultar etiquetas del mapa base desde CSS. */
@@ -221,11 +227,18 @@ function iconoServicio(s) {
 
 function renderMapa(lista) {
   capaMarcadores.clearLayers();
-  for (const s of lista) {
-    L.marker([s.lat, s.lng], { icon: iconoServicio(s), title: s.nombre, keyboard: true })
-      .on('click', () => abrirFicha(s.id))
-      .addTo(capaMarcadores);
-  }
+  capaMarcadores.addLayers(
+    lista.map((s) =>
+      L.marker([s.lat, s.lng], { icon: iconoServicio(s), title: s.nombre, keyboard: true }).on('click', () => abrirFicha(s.id))
+    )
+  );
+}
+
+/** Círculo con el número de servicios agrupados (cientos de marcadores serían ilegibles de lejos). */
+function iconoGrupo(grupo) {
+  const n = grupo.getChildCount();
+  const tam = n < 10 ? 36 : n < 100 ? 42 : 50;
+  return L.divIcon({ className: '', html: `<div class="grupo"><span>${n}</span></div>`, iconSize: [tam, tam] });
 }
 
 function ajustarMapa(lista) {
@@ -262,7 +275,7 @@ function renderLista(lista) {
           <div class="tarjeta-top">${etiquetas(s)}${s._dist != null && estado.ubicacion ? `<span class="dist">${formatoDistancia(s._dist)}</span>` : ''}</div>
           <h3>${esc(s.nombre)}${estado.favoritos.has(s.id) ? ' <span class="fav" aria-label="Guardado">★</span>' : ''}</h3>
           <p>${esc(s.descripcion)}</p>
-          <p class="mini">${esc(s.municipio)}, ${esc(s.departamento)} · ${esc(s.horario)}</p>
+          <p class="mini">${esc([s.municipio, s.departamento].filter(Boolean).join(', '))} · ${esc(s.horario)}</p>
         </button>
       </li>`
     )

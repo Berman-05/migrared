@@ -64,6 +64,15 @@ Para regenerar el mapa base: `node scripts/mapa-base.js <carpeta>` (ver las fuen
 2. Cambiar el campo `version` (por ejemplo `2026-11-02.1`).
 3. Publicar. Los teléfonos lo descargarán la próxima vez que tengan conexión.
 
+### Servicios tomados de OpenStreetMap
+
+`node scripts/osm-servicios.js` consulta OpenStreetMap y agrega a `servicios.json` los servicios
+útiles para la población migrante en todo el país: hospitales y centros de salud **públicos**, PNC,
+bomberos, Ministerio Público, PDH, embajadas y consulados, puestos fronterizos, albergues y
+organizaciones de apoyo. Se excluyen hospitales privados y oficinas sin relación (impuestos, etc.).
+Los servicios escritos a mano (id sin prefijo `osm-`) se conservan. Cada registro de OSM queda con
+su enlace en `fuente` y `estado: pendiente`. Después de ejecutarlo, subir `version`.
+
 Valores usados en los campos codificados:
 `tipoInstitucion`: `publica` | `ong` | `internacional` ·
 `categoria`: `salud` | `refugio` | `legal` | `migracion` | `proteccion` | `emergencia` ·
@@ -72,13 +81,14 @@ Los servicios `suspendido` no se muestran.
 
 ## Actualizar el código
 
-Después de cambiar HTML, CSS o JS, subir `VERSION` en `public/sw.js` (por ejemplo `v5` → `v6`). Si no, los
+Después de cambiar HTML, CSS o JS, subir `VERSION` en `public/sw.js` (por ejemplo `v6` → `v7`). Si no, los
 teléfonos seguirán usando la versión guardada. La app se recarga sola cuando detecta la versión nueva.
 
-## ⚠️ Datos de demostración
+## ⚠️ Datos sin verificar
 
-El catálogo incluido es **de ejemplo**: direcciones, coordenadas, teléfonos y horarios son
-aproximados y todos están marcados como `pendiente`. Antes de usarlo con personas reales, hay que
+El catálogo es de **prototipo**: los 17 servicios escritos a mano son datos de demostración con
+coordenadas aproximadas, y los ~390 de OpenStreetMap son lugares reales mapeados por voluntarios,
+pero sus horarios y teléfonos pueden estar desactualizados. Todos están marcados como `pendiente`. Antes de usarlo con personas reales, hay que
 verificar cada registro con la institución (Casa del Migrante, IGM, ACNUR, etc.), completar `fuente` y
 `fechaVerificacion` y cambiar `estado` a `activo`.
 
