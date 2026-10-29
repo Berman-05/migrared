@@ -22,12 +22,12 @@
   --sombra-1: 0 1px 2px rgb(0 0 0 / 0.06), 0 1px 1px rgb(0 0 0 / 0.04);
   --sombra-2: 0 6px 20px rgb(0 0 0 / 0.12), 0 1px 3px rgb(0 0 0 / 0.08);
 
-  --c-salud: #d63d33;
-  --c-refugio: #b86e0b;
+  --c-salud: #d1263c;
+  --c-refugio: #8a5a2b;
   --c-legal: #6448d1;
   --c-migracion: #1a72c2;
   --c-proteccion: #bb3584;
-  --c-emergencia: #de5012;
+  --c-emergencia: #ef8a00;
 
   --mapa-agua: #cddfe9;
   --mapa-tierra: #f8f7f3;
@@ -66,12 +66,12 @@
   --sombra-1: 0 1px 2px rgb(0 0 0 / 0.4);
   --sombra-2: 0 8px 24px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.4);
 
-  --c-salud: #f0675e;
-  --c-refugio: #e3a23d;
+  --c-salud: #f05468;
+  --c-refugio: #c9935e;
   --c-legal: #9d88f3;
   --c-migracion: #52a6ec;
   --c-proteccion: #e56db2;
-  --c-emergencia: #f7854a;
+  --c-emergencia: #ffa53d;
 
   --mapa-agua: #0c1a22;
   --mapa-tierra: #1d2523;
@@ -227,12 +227,13 @@ body.sin-controles .controls { display: none; }
   color: #fff;
 }
 .chip-ico svg { width: 15px; height: 15px; stroke-width: 2.4; }
-.chip-salud .chip-ico, .pin-salud { background: var(--c-salud); }
-.chip-refugio .chip-ico, .pin-refugio { background: var(--c-refugio); }
-.chip-legal .chip-ico, .pin-legal { background: var(--c-legal); }
-.chip-migracion .chip-ico, .pin-migracion { background: var(--c-migracion); }
-.chip-proteccion .chip-ico, .pin-proteccion { background: var(--c-proteccion); }
-.chip-emergencia .chip-ico, .pin-emergencia { background: var(--c-emergencia); }
+/* .pin.pin-x: más específico que .pin, que se declara después */
+.chip-salud .chip-ico, .pin.pin-salud { background: var(--c-salud); }
+.chip-refugio .chip-ico, .pin.pin-refugio { background: var(--c-refugio); }
+.chip-legal .chip-ico, .pin.pin-legal { background: var(--c-legal); }
+.chip-migracion .chip-ico, .pin.pin-migracion { background: var(--c-migracion); }
+.chip-proteccion .chip-ico, .pin.pin-proteccion { background: var(--c-proteccion); }
+.chip-emergencia .chip-ico, .pin.pin-emergencia { background: var(--c-emergencia); }
 
 .fila-modo { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 10px; }
 .segmento {
@@ -394,18 +395,27 @@ main { flex: 1; position: relative; min-height: 0; }
 .pin svg { width: 16px; height: 16px; stroke-width: 2.5; }
 
 /* Grupos de marcadores (Leaflet.markercluster) */
+/* Anillo repartido por categorías (conic-gradient puesto desde JS) y el número al centro */
 .grupo {
   width: 100%;
   height: 100%;
   display: grid;
   place-items: center;
+  padding: 5px;
   border-radius: 50%;
   background: var(--primary);
-  color: var(--primary-ink);
-  border: 2.5px solid var(--pin-borde);
-  box-shadow: 0 0 0 5px var(--primary-soft), 0 2px 6px rgb(0 0 0 / 0.25);
+  box-shadow: 0 0 0 2px var(--pin-borde), 0 2px 6px rgb(0 0 0 / 0.3);
+}
+.grupo span {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
   font-weight: 800;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
 }
 

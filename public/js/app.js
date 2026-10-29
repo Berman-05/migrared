@@ -182,8 +182,9 @@ function iniciarMapa() {
   capaMarcadores = L.markerClusterGroup({
     iconCreateFunction: iconoGrupo,
     showCoverageOnHover: false,
-    maxClusterRadius: 50,
-    disableClusteringAtZoom: 15,
+    // Agrupa fuerte de lejos y poco al acercarse, para ver los pines individuales antes.
+    maxClusterRadius: (z) => (z < 9 ? 45 : 28),
+    disableClusteringAtZoom: 13,
     chunkedLoading: true,
   }).addTo(mapa);
 }
@@ -270,7 +271,7 @@ function renderMapa(lista) {
   for (const s of lista) {
     if (enMapa.has(s.id)) continue;
     if (!marcadores.has(s.id)) {
-      marcadores.set(s.id, L.marker([s.lat, s.lng], { icon: iconoServicio(s), title: s.nombre }).on('click', () => abrirFicha(s.id)));
+      marcadores.set(s.id, L.marker([s.lat, s.lng], { icon: iconoServicio(s), title: s.nombre, categoria: s.categoria }).on('click', () => abrirFicha(s.id)));
     }
     poner.push(marcadores.get(s.id));
   }
@@ -285,11 +286,30 @@ function reiniciarMarcadores() {
   enMapa = new Set();
 }
 
-/** Círculo con el número de servicios agrupados (cientos de marcadores serían ilegibles de lejos). */
+/**
+ * Círculo con el número de servicios agrupados y un anillo repartido por el color de cada
+ * categoría, para saber qué hay dentro sin acercarse. Se arma con el DOM (no con un atributo
+ * style en HTML) porque la Content-Security-Policy no permite estilos en línea.
+ */
 function iconoGrupo(grupo) {
   const n = grupo.getChildCount();
-  const tam = n < 10 ? 36 : n < 100 ? 42 : 50;
-  return L.divIcon({ className: '', html: `<div class="grupo"><span>${n}</span></div>`, iconSize: [tam, tam] });
+  const tam = n < 10 ? 38 : n < 100 ? 44 : 52;
+  const cuenta = {};
+  for (const m of grupo.getAllChildMarkers()) cuenta[m.options.categoria] = (cuenta[m.options.categoria] || 0) + 1;
+  let acumulado = 0;
+  const tramos = CATEGORIAS.filter((c) => cuenta[c.id]).map((c) => {
+    const desde = (acumulado / n) * 100;
+    acumulado += cuenta[c.id];
+    return `var(--c-${c.id}) ${desde}% ${(acumulado / n) * 100}%`;
+  });
+  const el = document.createElement('div');
+  el.className = 'grupo';
+  if (tramos.length) el.style.background = `conic-gradient(${tramos.join(', ')})`;
+  el.title = CATEGORIAS.filter((c) => cuenta[c.id]).map((c) => `${cuenta[c.id]} ${c.nombre}`).join(' · ');
+  const num = document.createElement('span');
+  num.textContent = n;
+  el.append(num);
+  return L.divIcon({ className: '', html: el, iconSize: [tam, tam] });
 }
 
 function ajustarMapa(lista) {
