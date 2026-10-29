@@ -4,7 +4,7 @@
 //  - Mosaicos del mapa: caché primero; se guardan las zonas que la persona ya vio con conexión
 //    (con un límite para no llenar la memoria del teléfono).
 
-const VERSION = 'v6';
+const VERSION = 'v7';
 const CACHE_APP = `migrared-app-${VERSION}`;
 const CACHE_DATOS = 'migrared-datos';
 // v2: la versión anterior guardó por error respuestas 403 de OpenStreetMap.
@@ -16,6 +16,7 @@ const APP_SHELL = [
   'index.html',
   'css/app.css',
   'js/app.js',
+  'js/tema.js',
   'js/db.js',
   'js/sync.js',
   'manifest.webmanifest',

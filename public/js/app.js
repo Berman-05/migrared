@@ -7,13 +7,14 @@ import { sincronizar } from './sync.js';
 
 /** Categorías organizadas por necesidad del usuario, no por institución. */
 const CATEGORIAS = [
-  { id: 'salud', nombre: 'Salud', icono: '✚', palabras: 'hospital medico doctor clinica enfermo herida embarazo vacuna medicina' },
-  { id: 'refugio', nombre: 'Albergue', icono: '⌂', palabras: 'dormir casa comida alimento comer ducha hospedaje techo' },
-  { id: 'legal', nombre: 'Asesoría legal', icono: '§', palabras: 'abogado refugio asilo juicio detenido defensa ley' },
-  { id: 'migracion', nombre: 'Trámites migratorios', icono: '▤', palabras: 'papeles documentos pasaporte permiso visa residencia regularizar' },
-  { id: 'proteccion', nombre: 'Protección de derechos', icono: '◈', palabras: 'derechos denuncia abuso violencia nino nina menor familia mujer' },
-  { id: 'emergencia', nombre: 'Emergencias', icono: '!', palabras: 'policia bomberos ambulancia urgencia peligro robo' },
+  { id: 'salud', nombre: 'Salud', icono: '<path d="M12 6v12M6 12h12"/>', palabras: 'hospital medico doctor clinica enfermo herida embarazo vacuna medicina' },
+  { id: 'refugio', nombre: 'Albergue', icono: '<path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/>', palabras: 'dormir casa comida alimento comer ducha hospedaje techo' },
+  { id: 'legal', nombre: 'Asesoría legal', icono: '<path d="M12 4v16M8 20h8M5 8h14"/><path d="m5 8-2.5 6a3 3 0 0 0 5 0Z"/><path d="m19 8-2.5 6a3 3 0 0 0 5 0Z"/>', palabras: 'abogado refugio asilo juicio detenido defensa ley' },
+  { id: 'migracion', nombre: 'Trámites migratorios', icono: '<rect x="6" y="3" width="12" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M9 16h6"/>', palabras: 'papeles documentos pasaporte permiso visa residencia regularizar' },
+  { id: 'proteccion', nombre: 'Protección de derechos', icono: '<path d="M12 21s7-3.5 7-9V6l-7-3-7 3v6c0 5.5 7 9 7 9Z"/>', palabras: 'derechos denuncia abuso violencia nino nina menor familia mujer' },
+  { id: 'emergencia', nombre: 'Emergencias', icono: '<path d="M12 8v5M12 16.5v.5"/><path d="M10.3 3.9 2.6 17.5a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>', palabras: 'policia bomberos ambulancia urgencia peligro robo' },
 ];
+const svgIcono = (paths) => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
 const CAT = Object.fromEntries(CATEGORIAS.map((c) => [c.id, c]));
 
 const TIPO_INSTITUCION = { publica: 'Pública', ong: 'ONG', internacional: 'Organismo internacional' };
@@ -22,6 +23,16 @@ const ESTADO = { activo: 'Activo', suspendido: 'Suspendido', pendiente: 'Pendien
 
 const CENTRO_GT = [15.6, -90.35];
 const INTERVALO_SYNC_MS = 30 * 60 * 1000;
+// Modo «Cerca»: solo se dibujan los N servicios más cercanos; es lo que mantiene fluido el mapa en teléfonos modestos.
+const LIMITE_CERCA = 40;
+const PAGINA_LISTA = 30;
+const ORDEN_NOMBRE = new Intl.Collator('es').compare;
+
+// Preferencias de interfaz (tema, modo): solo en este dispositivo y sin datos personales.
+const pref = {
+  leer: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
+  guardar: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+};
 
 // ---------------------------------------------------------------------------
 // Estado
@@ -39,6 +50,9 @@ const estado = {
   favoritos: new Set(),
   ubicacion: null, // { lat, lng } – solo en memoria, nunca se guarda ni se envía
   vista: 'mapa',
+  modo: pref.leer('modo') === 'todo' ? 'todo' : 'cerca',
+  totalFiltrados: 0,
+  listaSucia: true,
   servidorAlcanzable: true, // navigator.onLine no detecta redes sin salida a Internet
 };
 
@@ -113,12 +127,16 @@ function serviciosFiltrados() {
     }
     return true;
   });
+  estado.totalFiltrados = lista.length;
 
-  if (estado.ubicacion) {
-    for (const s of lista) s._dist = distanciaKm(estado.ubicacion, s);
+  // Referencia para «Cerca»: la ubicación de la persona o, si no la compartió, el centro del mapa.
+  const ref = estado.ubicacion || (estado.modo === 'cerca' && mapa ? mapa.getCenter() : null);
+  if (ref) {
+    for (const s of lista) s._dist = distanciaKm(ref, s);
     lista.sort((a, b) => a._dist - b._dist);
+    if (estado.modo === 'cerca') lista = lista.slice(0, LIMITE_CERCA);
   } else {
-    lista.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    lista.sort((a, b) => ORDEN_NOMBRE(a.nombre, b.nombre));
   }
   return lista;
 }
@@ -136,7 +154,15 @@ const MOSAICO_VACIO =
   'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>');
 
 function iniciarMapa() {
-  mapa = L.map('mapa', { zoomControl: true, attributionControl: true }).setView(CENTRO_GT, 7);
+  mapa = L.map('mapa', { zoomControl: false, attributionControl: true }).setView(CENTRO_GT, 7);
+  L.control.zoom({ position: 'bottomleft' }).addTo(mapa);
+  // En «Cerca» sin ubicación, la lista sigue a la zona que se está mirando.
+  let t;
+  mapa.on('moveend', () => {
+    if (estado.modo !== 'cerca' || estado.ubicacion) return;
+    clearTimeout(t);
+    t = setTimeout(render, 180);
+  });
   // El mapa base va debajo de los mosaicos (tilePane = 200): con conexión lo tapa OpenStreetMap.
   mapa.createPane('base').style.zIndex = 150;
   mapa.on('zoomend', marcarZoom);
@@ -215,23 +241,48 @@ async function cargarMapaBase() {
   capa.addTo(mapa);
 }
 
+// Un ícono por categoría (no uno por servicio) y un marcador por servicio, creados una sola vez.
+const iconos = new Map();
 function iconoServicio(s) {
-  const c = CAT[s.categoria] || { icono: '•' };
-  return L.divIcon({
-    className: '',
-    html: `<div class="pin pin-${esc(s.categoria)}${s.emergencia ? ' pin-24h' : ''}"><span>${esc(c.icono)}</span></div>`,
-    iconSize: [34, 42],
-    iconAnchor: [17, 40],
-  });
+  if (!iconos.has(s.categoria)) {
+    const c = CAT[s.categoria];
+    iconos.set(
+      s.categoria,
+      L.divIcon({
+        className: '',
+        html: `<div class="pin pin-${esc(s.categoria)}">${c ? svgIcono(c.icono) : ''}</div>`,
+        iconSize: [32, 40],
+        iconAnchor: [16, 39],
+      })
+    );
+  }
+  return iconos.get(s.categoria);
 }
 
+const marcadores = new Map();
+let enMapa = new Set();
+
 function renderMapa(lista) {
+  // Solo se agregan y quitan las diferencias: recrear cientos de marcadores en cada búsqueda trababa el mapa.
+  const nuevos = new Set(lista.map((s) => s.id));
+  const quitar = [...enMapa].filter((id) => !nuevos.has(id)).map((id) => marcadores.get(id));
+  const poner = [];
+  for (const s of lista) {
+    if (enMapa.has(s.id)) continue;
+    if (!marcadores.has(s.id)) {
+      marcadores.set(s.id, L.marker([s.lat, s.lng], { icon: iconoServicio(s), title: s.nombre }).on('click', () => abrirFicha(s.id)));
+    }
+    poner.push(marcadores.get(s.id));
+  }
+  if (quitar.length) capaMarcadores.removeLayers(quitar);
+  if (poner.length) capaMarcadores.addLayers(poner);
+  enMapa = nuevos;
+}
+
+function reiniciarMarcadores() {
   capaMarcadores.clearLayers();
-  capaMarcadores.addLayers(
-    lista.map((s) =>
-      L.marker([s.lat, s.lng], { icon: iconoServicio(s), title: s.nombre, keyboard: true }).on('click', () => abrirFicha(s.id))
-    )
-  );
+  marcadores.clear();
+  enMapa = new Set();
 }
 
 /** Círculo con el número de servicios agrupados (cientos de marcadores serían ilegibles de lejos). */
@@ -260,26 +311,42 @@ function etiquetas(s) {
   return partes.join('');
 }
 
-function renderLista(lista) {
-  const n = lista.length;
-  $('#resumen').textContent =
-    n === 0
-      ? 'No se encontraron servicios con esos filtros.'
-      : `${n} servicio${n === 1 ? '' : 's'}${estado.ubicacion ? ', ordenados por cercanía' : ''}`;
+function textoResumen(n) {
+  if (n === 0) return 'No se encontraron servicios con esos filtros.';
+  const plural = `${n} servicio${n === 1 ? '' : 's'}`;
+  if (estado.modo === 'todo') return `${plural}${estado.ubicacion ? ', ordenados por cercanía' : ''}`;
+  return estado.ubicacion ? `${plural} más cercanos a usted` : `${plural} más cercanos a la zona del mapa`;
+}
 
-  $('#lista').innerHTML = lista
-    .map(
-      (s) => `
+function tarjeta(s) {
+  return `
       <li>
         <button type="button" class="tarjeta" data-id="${esc(s.id)}">
           <div class="tarjeta-top">${etiquetas(s)}${s._dist != null && estado.ubicacion ? `<span class="dist">${formatoDistancia(s._dist)}</span>` : ''}</div>
           <h3>${esc(s.nombre)}${estado.favoritos.has(s.id) ? ' <span class="fav" aria-label="Guardado">★</span>' : ''}</h3>
           <p>${esc(s.descripcion)}</p>
-          <p class="mini">${esc([s.municipio, s.departamento].filter(Boolean).join(', '))} · ${esc(s.horario)}</p>
+          <p class="mini">${esc([s.municipio, s.departamento].filter(Boolean).join(', '))}${s.horario ? ' · ' + esc(s.horario) : ''}</p>
         </button>
-      </li>`
-    )
-    .join('');
+      </li>`;
+}
+
+// La lista se pinta por páginas: cientos de tarjetas de golpe bloqueaban el teléfono.
+let listaActual = [];
+let mostrados = 0;
+
+function renderLista(lista) {
+  listaActual = lista;
+  mostrados = 0;
+  $('#resumen').textContent = textoResumen(lista.length);
+  $('#lista').innerHTML = '';
+  agregarPagina();
+}
+
+function agregarPagina() {
+  const trozo = listaActual.slice(mostrados, mostrados + PAGINA_LISTA);
+  $('#lista').insertAdjacentHTML('beforeend', trozo.map(tarjeta).join(''));
+  mostrados += trozo.length;
+  $('#btn-mas').hidden = mostrados >= listaActual.length;
 }
 
 // ---------------------------------------------------------------------------
@@ -304,7 +371,7 @@ function abrirFicha(id) {
       <button type="button" class="cerrar" data-accion="cerrar" aria-label="Cerrar">×</button>
     </div>
     <h2 id="ficha-titulo">${esc(s.nombre)}</h2>
-    <p class="inst">${esc(s.institucion)} · ${esc(TIPO_INSTITUCION[s.tipoInstitucion] || s.tipoInstitucion)}</p>
+    <p class="inst">${esc([s.institucion, TIPO_INSTITUCION[s.tipoInstitucion] || s.tipoInstitucion].filter(Boolean).join(' · '))}</p>
     ${s.estado !== 'activo' ? `<p class="alerta">${esc(ESTADO[s.estado] || s.estado)}: confirme antes de ir.</p>` : ''}
     <p class="desc">${esc(s.descripcion)}</p>
 
@@ -362,8 +429,27 @@ async function alternarFavorito(id) {
 function render({ ajustar = false } = {}) {
   const lista = serviciosFiltrados();
   renderMapa(lista);
-  renderLista(lista);
-  if (ajustar) ajustarMapa(lista);
+  // La lista oculta no se pinta: se marca y se pinta al abrir la pestaña.
+  if (estado.vista === 'lista') renderLista(lista);
+  else estado.listaSucia = true;
+  renderModo(lista.length);
+  // En «Cerca» sin ubicación el mapa manda; moverlo cambiaría la propia selección.
+  if (ajustar && (estado.modo === 'todo' || estado.ubicacion)) ajustarMapa(lista);
+}
+
+function renderModo(n) {
+  document.querySelectorAll('[data-modo]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.modo === estado.modo)));
+  $('#total-todos').textContent = estado.totalFiltrados;
+  const aviso = $('#mapa-aviso');
+  aviso.hidden = estado.modo !== 'cerca' || n === 0;
+  aviso.textContent = estado.ubicacion ? `${n} más cercanos a usted` : `${n} más cercanos · mueva el mapa para ver otra zona`;
+}
+
+function cambiarModo(modo) {
+  if (modo === estado.modo) return;
+  estado.modo = modo;
+  pref.guardar('modo', modo);
+  render({ ajustar: modo === 'todo' });
 }
 
 function renderCategorias() {
@@ -371,8 +457,14 @@ function renderCategorias() {
     `<button type="button" class="chip activa" data-cat="" aria-pressed="true">Todos</button>` +
     CATEGORIAS.map(
       (c) =>
-        `<button type="button" class="chip chip-${c.id}" data-cat="${c.id}" aria-pressed="false"><span class="chip-ico" aria-hidden="true">${c.icono}</span>${c.nombre}</button>`
+        `<button type="button" class="chip chip-${c.id}" data-cat="${c.id}" aria-pressed="false"><span class="chip-ico">${svgIcono(c.icono)}</span>${c.nombre}</button>`
     ).join('');
+}
+
+function aplicarTema(tema) {
+  document.documentElement.dataset.tema = tema;
+  document.querySelector('meta[name="theme-color"]').content = tema === 'oscuro' ? '#0e1211' : '#ffffff';
+  $('#btn-tema').setAttribute('aria-label', tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro');
 }
 
 function renderDepartamentos() {
@@ -394,6 +486,10 @@ function cambiarVista(vista) {
   });
   document.body.classList.toggle('sin-controles', vista === 'emergencia' || vista === 'info');
   if (vista === 'mapa') setTimeout(() => mapa.invalidateSize(), 0);
+  if (vista === 'lista' && estado.listaSucia) {
+    estado.listaSucia = false;
+    renderLista(serviciosFiltrados());
+  }
   if (vista === 'info') renderInfo();
 }
 
@@ -421,6 +517,7 @@ async function renderInfo() {
 
 async function cargarDesdeDB() {
   estado.servicios = (await obtenerServicios()).map((s) => ({ ...s, _busqueda: textoBusqueda(s) }));
+  reiniciarMarcadores();
   renderDepartamentos();
 }
 
@@ -500,6 +597,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 async function borrarDatos() {
   if (!confirm('Se borrarán el catálogo guardado, sus favoritos y el mapa guardado de este teléfono. ¿Continuar?')) return;
   await borrarTodo();
+  try { localStorage.clear(); } catch {}
   if ('caches' in window) for (const k of await caches.keys()) await caches.delete(k);
   if ('serviceWorker' in navigator) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
   location.reload();
@@ -544,6 +642,28 @@ function conectarEventos() {
       render({ ajustar: true });
     });
   }
+
+  document.querySelectorAll('[data-modo]').forEach((b) => b.addEventListener('click', () => cambiarModo(b.dataset.modo)));
+
+  $('#btn-filtros').addEventListener('click', (e) => {
+    const abierto = e.currentTarget.getAttribute('aria-expanded') === 'true';
+    e.currentTarget.setAttribute('aria-expanded', String(!abierto));
+    $('#panel-filtros').hidden = abierto;
+    setTimeout(() => mapa.invalidateSize(), 0);
+  });
+
+  $('#btn-tema').addEventListener('click', () => {
+    const tema = document.documentElement.dataset.tema === 'oscuro' ? 'claro' : 'oscuro';
+    pref.guardar('tema', tema);
+    aplicarTema(tema);
+  });
+
+  $('#btn-mas').addEventListener('click', agregarPagina);
+  // Carga la siguiente página sola al llegar al final de la lista.
+  new IntersectionObserver((e) => e[0].isIntersecting && !$('#btn-mas').hidden && agregarPagina(), {
+    root: $('#vista-lista'),
+    rootMargin: '400px',
+  }).observe($('#btn-mas'));
 
   $('#lista').addEventListener('click', (e) => {
     const tarjeta = e.target.closest('.tarjeta');
@@ -595,6 +715,7 @@ async function iniciar() {
     navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service Worker no registrado:', err));
   }
 
+  aplicarTema(document.documentElement.dataset.tema);
   renderCategorias();
   iniciarMapa();
   conectarEventos();
