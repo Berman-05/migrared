@@ -95,3 +95,13 @@ verificar cada registro con la institución (Casa del Migrante, IGM, ACNUR, etc.
 ## Íconos
 
 `node scripts/icons.js` regenera `icon-192.png` e `icon-512.png` (sin dependencias).
+
+## Trifoliar
+
+`public/trifoliar/` es una página que simula el trifoliar de MigraRed, para la presentación:
+<https://berman-05.github.io/migrared/trifoliar/>
+
+- En computadora se dobla en 3D (cerrado → abrir portada → interior → exterior).
+- En el celular muestra los seis paneles en orden de lectura, deslizando de lado.
+- `node scripts/qr.js` regenera los QR: el de la portada abre la app y `qr-trifoliar.png`
+  (en la raíz del repositorio) abre el trifoliar, para ponerlo en las diapositivas.

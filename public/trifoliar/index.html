@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Trifoliar informativo de MigraRed: guía segura y sin conexión para la población migrante en Guatemala.">
+  <meta name="theme-color" content="#0b6b61">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>MigraRed · Trifoliar</title>
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="trifoliar.css">
+</head>
+<body>
+  <header class="barra">
+    <a class="marca" href="../" title="Abrir la app MigraRed">
+      <img src="../icons/icon.svg" alt="" width="28" height="28">
+      <span>MigraRed</span>
+    </a>
+    <p class="indicador" id="indicador" aria-live="polite">Trifoliar</p>
+  </header>
+
+  <main class="escena" id="escena">
+    <!-- La hoja tiene tres paneles. Cada panel tiene dos caras: el frente (cara interna del
+         trifoliar) y el dorso (cara externa). En computadora se doblan en 3D; en el celular se
+         muestran uno tras otro, en el orden en que se lee el trifoliar. -->
+    <div class="hoja" id="hoja" data-estado="cerrado" role="group" aria-label="Trifoliar de MigraRed">
+
+      <!-- Panel izquierdo: frente = Panel 2 · dorso = Panel 1 (portada) -->
+      <div class="panel panel-izq">
+        <section class="cara frente cara-2" data-num="2" data-nombre="¿Qué es MigraRed?" aria-labelledby="t2">
+          <div class="contenido">
+            <p class="etiqueta">Interior</p>
+            <h2 id="t2">¿Qué es MigraRed? <span aria-hidden="true">🌍</span></h2>
+            <p class="destacado">Es una herramienta digital de bolsillo diseñada especialmente para <strong>acompañar, informar y proteger</strong> a la población migrante.</p>
+            <p>MigraRed te ayuda a encontrar rápidamente lugares seguros, asistencia humanitaria y servicios de emergencia en todo el país, asegurando que <strong>nunca estés solo en tu ruta</strong>, sin importar las condiciones.</p>
+            <svg class="ruta" viewBox="0 0 240 150" aria-hidden="true">
+              <path class="ruta-linea" d="M16 128 C 60 120, 52 80, 96 74 S 150 96, 170 58 S 210 22, 226 20"/>
+              <g class="ruta-pin" transform="translate(16 128)"><circle r="7"/></g>
+              <g class="ruta-pin p-salud" transform="translate(96 74)"><path d="M0 -20c-6.6 0-12 5.2-12 11.6C-12 0.4 0 12 0 12s12-11.6 12-20.4C12-14.8 6.6-20 0-20Z"/><text y="-5">✚</text></g>
+              <g class="ruta-pin p-refugio" transform="translate(170 58)"><path d="M0 -20c-6.6 0-12 5.2-12 11.6C-12 0.4 0 12 0 12s12-11.6 12-20.4C12-14.8 6.6-20 0-20Z"/><text y="-5">⌂</text></g>
+              <g class="ruta-pin p-final" transform="translate(226 20)"><circle r="8"/><circle r="3" class="centro"/></g>
+            </svg>
+          </div>
+        </section>
+        <section class="cara dorso cara-1 portada" data-num="1" data-nombre="Portada" aria-labelledby="t1">
+          <div class="contenido">
+            <div class="logo"><img src="../icons/icon.svg" alt="" width="64" height="64"></div>
+            <h1 id="t1">MigraRed</h1>
+            <p class="lema">Tu guía segura y sin conexión en cada paso del camino.</p>
+            <figure class="qr">
+              <img src="qr-app.svg" alt="Código QR que abre la app MigraRed" width="220" height="220">
+            </figure>
+            <p class="qr-texto"><span aria-hidden="true">👇</span> Escanea este código con tu cámara para abrir la app y llevarla contigo.</p>
+            <a class="boton-app" href="../">Abrir la app</a>
+          </div>
+        </section>
+      </div>
+
+      <!-- Panel central: frente = Panel 3 · dorso = Panel 6 (contraportada) -->
+      <div class="panel panel-cen">
+        <section class="cara frente cara-3" data-num="3" data-nombre="¡Funciona sin Internet!" aria-labelledby="t3">
+          <div class="contenido">
+            <p class="etiqueta">Interior</p>
+            <h2 id="t3">¡Funciona sin Internet! <span aria-hidden="true">📵</span></h2>
+            <p class="destacado">¿Te quedaste sin datos móviles o estás en una zona sin señal? <strong>¡No hay problema!</strong></p>
+            <ul class="lista-iconos">
+              <li>
+                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+                <div><strong>Siempre disponible</strong> Puedes buscar lugares, ver información detallada, ordenar resultados por cercanía e incluso obtener los números para llamar, totalmente sin conexión.</div>
+              </li>
+              <li>
+                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg></span>
+                <div><strong>Mapa integrado</strong> La app incluye un mapa base de todo el país, carreteras principales y países vecinos que funciona desde el primer segundo, aunque no tengas internet.</div>
+              </li>
+              <li>
+                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg></span>
+                <div><strong>Memoria inteligente</strong> Cuando tienes WiFi o datos y ves el mapa detallado (con calles específicas), la app guarda automáticamente esas zonas para que puedas seguir viéndolas cuando pierdas la conexión.</div>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="cara dorso cara-6" data-num="6" data-nombre="¿Cómo empezar?" aria-labelledby="t6">
+          <div class="contenido">
+            <p class="etiqueta">Contraportada</p>
+            <h2 id="t6">¿Cómo empezar a usar MigraRed?</h2>
+            <ol class="pasos">
+              <li><span class="num" aria-hidden="true">1</span><div><strong>Escanea el QR</strong> de la portada con la cámara de tu celular.</div></li>
+              <li><span class="num" aria-hidden="true">2</span><div><strong>Abre el enlace.</strong> No necesitas descargar nada pesado de las tiendas de apps.</div></li>
+              <li><span class="num" aria-hidden="true">3</span><div><strong>Agrega MigraRed a tu pantalla de inicio</strong> para tenerla siempre a la mano como cualquier otra aplicación.</div></li>
+            </ol>
+            <p class="nota-verde">Es completamente <strong>gratis</strong> y está diseñada para <strong>no consumir la memoria</strong> de tu teléfono.</p>
+            <footer class="creditos">
+              <img src="../icons/icon.svg" alt="" width="28" height="28">
+              <p>Proyecto social · Ética Aplicada<br>Universidad Rafael Landívar · Campus de Quetzaltenango</p>
+            </footer>
+          </div>
+        </section>
+      </div>
+
+      <!-- Panel derecho: frente = Panel 4 · dorso = Panel 5 (solapa) -->
+      <div class="panel panel-der">
+        <section class="cara frente cara-4" data-num="4" data-nombre="¿Qué ayuda puedes encontrar?" aria-labelledby="t4">
+          <div class="contenido">
+            <p class="etiqueta">Interior</p>
+            <h2 id="t4">¿Qué ayuda puedes encontrar? <span aria-hidden="true">🏥</span></h2>
+            <p>Hemos seleccionado cuidadosamente los servicios más útiles y seguros para tu viaje. En MigraRed encontrarás <strong>direcciones, distancias y contactos</strong> de:</p>
+            <ul class="categorias">
+              <li class="cat-salud"><span class="cat-ico" aria-hidden="true">✚</span><div><strong>Salud</strong> Hospitales y centros de salud públicos (gratuitos).</div></li>
+              <li class="cat-refugio"><span class="cat-ico" aria-hidden="true">⌂</span><div><strong>Refugio</strong> Albergues y organizaciones de apoyo al migrante.</div></li>
+              <li class="cat-emergencia"><span class="cat-ico" aria-hidden="true">!</span><div><strong>Emergencias</strong> Policía Nacional Civil (PNC) y Bomberos.</div></li>
+              <li class="cat-migracion"><span class="cat-ico" aria-hidden="true">▤</span><div><strong>Derechos e Identidad</strong> Embajadas, consulados y puestos fronterizos.</div></li>
+              <li class="cat-proteccion"><span class="cat-ico" aria-hidden="true">◈</span><div><strong>Protección</strong> Procuraduría de los Derechos Humanos (PDH) y Ministerio Público.</div></li>
+            </ul>
+            <p class="nota">Solo te mostramos información útil para ti, omitiendo lugares privados u oficinas que no necesitas.</p>
+          </div>
+        </section>
+        <section class="cara dorso cara-5 solapa" data-num="5" data-nombre="100% Privado y Seguro" aria-labelledby="t5">
+          <div class="contenido">
+            <p class="etiqueta">Solapa</p>
+            <h2 id="t5">100% Privado y Seguro <span aria-hidden="true">🔒</span></h2>
+            <p class="destacado">Sabemos que tu seguridad y anonimato son lo más importante. Por eso, MigraRed está construida para protegerte:</p>
+            <ul class="lista-iconos">
+              <li>
+                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/><path d="m3 3 18 18"/></svg></span>
+                <div><strong>Cero registros</strong> No necesitas crear cuentas, dar tu correo, ni llenar formularios.</div>
+              </li>
+              <li>
+                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+                <div><strong>Tu ubicación es tuya</strong> Si buscas lugares “Cerca de mí”, tu teléfono calcula la distancia, pero esa información nunca se envía a internet ni se guarda.</div>
+              </li>
+              <li>
+                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12s3.5-7 9-7c2 0 3.7.9 5.1 2M21 12s-3.5 7-9 7c-2 0-3.7-.9-5.1-2"/><path d="m3 3 18 18"/></svg></span>
+                <div><strong>Sin rastreo</strong> No hay cookies ni sistemas que vigilen lo que haces en la app.</div>
+              </li>
+              <li>
+                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span>
+                <div><strong>Control total</strong> Puedes borrar toda tu información guardada (como tus favoritos) con un solo botón desde la sección de Privacidad.</div>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Controles en computadora -->
+  <nav class="controles" aria-label="Doblar el trifoliar">
+    <button type="button" data-ir="cerrado" aria-pressed="true">Cerrado</button>
+    <button type="button" data-ir="medio" aria-pressed="false">Abrir portada</button>
+    <button type="button" data-ir="abierto" aria-pressed="false">Interior</button>
+    <button type="button" data-ir="exterior" aria-pressed="false">Exterior</button>
+  </nav>
+  <p class="ayuda">Haz clic en el trifoliar o usa las flechas ← → para abrirlo.</p>
+
+  <!-- Navegación en el celular -->
+  <nav class="puntos" id="puntos" aria-label="Paneles del trifoliar">
+    <button type="button" class="flecha" data-mover="-1" aria-label="Panel anterior">‹</button>
+    <div class="lista-puntos" id="lista-puntos"></div>
+    <button type="button" class="flecha" data-mover="1" aria-label="Panel siguiente">›</button>
+  </nav>
+
+  <script src="trifoliar.js"></script>
+</body>
+</html>
