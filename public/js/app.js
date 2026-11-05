@@ -19,7 +19,6 @@ const CAT = Object.fromEntries(CATEGORIAS.map((c) => [c.id, c]));
 
 const TIPO_INSTITUCION = { publica: 'Pública', ong: 'ONG', internacional: 'Organismo internacional' };
 const COSTO = { gratuito: 'Gratuito', variable: 'Costo variable' };
-const ESTADO = { activo: 'Activo', suspendido: 'Suspendido', pendiente: 'Pendiente de verificar' };
 
 const CENTRO_GT = [15.6, -90.35];
 const INTERVALO_SYNC_MS = 30 * 60 * 1000;
@@ -392,7 +391,6 @@ function abrirFicha(id) {
     </div>
     <h2 id="ficha-titulo">${esc(s.nombre)}</h2>
     <p class="inst">${esc([s.institucion, TIPO_INSTITUCION[s.tipoInstitucion] || s.tipoInstitucion].filter(Boolean).join(' · '))}</p>
-    ${s.estado !== 'activo' ? `<p class="alerta">${esc(ESTADO[s.estado] || s.estado)}: confirme antes de ir.</p>` : ''}
     <p class="desc">${esc(s.descripcion)}</p>
 
     <div class="ficha-acciones">
@@ -412,7 +410,6 @@ function abrirFicha(id) {
       ${fila('Idiomas', (s.idiomas || []).join(', '))}
       ${fila('Tipo de servicio', s.subcategoria || c?.nombre)}
       ${fila('Fuente del dato', s.fuente)}
-      ${fila('Última verificación', s.fechaVerificacion || 'Sin verificar')}
     </dl>`;
 
   const dialogo = $('#ficha');

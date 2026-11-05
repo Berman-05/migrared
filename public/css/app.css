@@ -594,7 +594,6 @@ dialog::backdrop { background: rgb(0 0 0 / 0.4); transition: background-color 25
 .ficha-cuerpo h2 { margin: 12px 0 4px; font-size: 1.35rem; }
 .inst { margin: 0 0 8px; color: var(--muted); font-size: 0.9rem; }
 .desc { margin: 8px 0 16px; }
-.alerta { margin: 8px 0; padding: 9px 12px; border-radius: 10px; background: var(--warn-bg); color: var(--warn-ink); font-size: 0.88rem; font-weight: 600; }
 .ficha-acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
 .ficha-acciones .btn { font-size: 0.9rem; }
 .ficha-acciones .btn-primario { grid-column: 1 / -1; }

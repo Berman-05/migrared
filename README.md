@@ -81,7 +81,7 @@ Los servicios `suspendido` no se muestran.
 
 ## Actualizar el código
 
-Después de cambiar HTML, CSS o JS, subir `VERSION` en `public/sw.js` (por ejemplo `v6` → `v7`). Si no, los
+Después de cambiar HTML, CSS o JS, subir `VERSION` en `public/sw.js` (por ejemplo `v9` → `v10`). Si no, los
 teléfonos seguirán usando la versión guardada. La app se recarga sola cuando detecta la versión nueva.
 
 ## ⚠️ Datos sin verificar
