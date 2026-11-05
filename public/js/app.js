@@ -376,6 +376,27 @@ function fila(titulo, valor) {
   return valor ? `<dt>${esc(titulo)}</dt><dd>${esc(valor)}</dd>` : '';
 }
 
+/**
+ * Enlace para abrir el servicio en la app de mapas del teléfono:
+ *  - Android: geo: abre la app de mapas instalada (Google Maps, OsmAnd, Maps.me…), que puede
+ *    funcionar sin conexión si tiene mapas descargados.
+ *  - iPhone / iPad: maps.apple.com abre Apple Maps.
+ *  - Computadora u otros: Google Maps en una pestaña nueva.
+ * Solo se envían las coordenadas y el nombre del servicio, nunca la ubicación de la persona.
+ */
+function enlaceMapas(s) {
+  const ua = navigator.userAgent;
+  const nombre = encodeURIComponent(s.nombre);
+  if (/Android/i.test(ua)) {
+    return { href: `geo:0,0?q=${s.lat},${s.lng}(${nombre})`, nuevaPestana: false };
+  }
+  // iPadOS se presenta como Mac, pero con pantalla táctil.
+  if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) {
+    return { href: `https://maps.apple.com/?q=${nombre}&ll=${s.lat},${s.lng}`, nuevaPestana: false };
+  }
+  return { href: `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`, nuevaPestana: true };
+}
+
 function abrirFicha(id) {
   const s = estado.servicios.find((x) => x.id === id);
   if (!s) return;
@@ -383,6 +404,7 @@ function abrirFicha(id) {
   const guardado = estado.favoritos.has(s.id);
   const tel = String(s.telefono || '').replace(/[^\d+]/g, '');
   const dist = estado.ubicacion ? formatoDistancia(distanciaKm(estado.ubicacion, s)) : '';
+  const mapas = enlaceMapas(s);
 
   $('#ficha-cuerpo').innerHTML = `
     <div class="ficha-head">
@@ -396,7 +418,7 @@ function abrirFicha(id) {
     <div class="ficha-acciones">
       ${tel ? `<a class="btn btn-primario" href="tel:${esc(tel)}">Llamar ${esc(s.telefono)}</a>` : ''}
       <button type="button" class="btn" data-accion="ver-mapa">Ver en el mapa</button>
-      <a class="btn" href="geo:${s.lat},${s.lng}?q=${s.lat},${s.lng}" rel="noopener">Abrir en app de mapas</a>
+      <a class="btn" href="${esc(mapas.href)}"${mapas.nuevaPestana ? ' target="_blank"' : ''} rel="noopener noreferrer">Abrir en app de mapas</a>
       <button type="button" class="btn" data-accion="favorito">${guardado ? '★ Quitar de guardados' : '☆ Guardar'}</button>
     </div>
 
